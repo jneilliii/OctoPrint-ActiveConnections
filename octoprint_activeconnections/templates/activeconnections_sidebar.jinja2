@@ -1,3 +1,6 @@
-<div class="row-fluid" data-bind="foreach: active_connections">
-    <div class="row-fluid" data-bind="text: $data"></div>
+<!-- ko foreach: active_connections -->
+<div class="row-fluid">
+    <div class="span6" data-bind="text: remoteAddress"></div>
+    <div class="span6" data-bind="text: username"></div>
 </div>
+<!-- /ko -->

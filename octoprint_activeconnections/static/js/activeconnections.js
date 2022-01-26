@@ -8,6 +8,8 @@ $(function() {
     function ActiveconnectionsViewModel(parameters) {
         var self = this;
 
+        self.settingsViewModel = parameters[0];
+
         self.active_connections = ko.observableArray([]);
 
         self.onDataUpdaterPluginMessage = function (plugin, data) {
@@ -21,7 +23,7 @@ $(function() {
 
     OCTOPRINT_VIEWMODELS.push({
         construct: ActiveconnectionsViewModel,
-        dependencies: [ /* "loginStateViewModel", "settingsViewModel" */ ],
-        elements: [ "#sidebar_plugin_activeconnections" ]
+        dependencies: [ "settingsViewModel" ],
+        elements: [ "#sidebar_plugin_activeconnections", "#settings_plugin_activeconnections" ]
     });
 });

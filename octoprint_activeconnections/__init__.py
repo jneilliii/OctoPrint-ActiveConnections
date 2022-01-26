@@ -8,6 +8,7 @@ from octoprint.events import Events
 class ActiveconnectionsPlugin(octoprint.plugin.AssetPlugin,
                               octoprint.plugin.TemplatePlugin,
                               octoprint.plugin.EventHandlerPlugin,
+                              octoprint.plugin.SettingsPlugin
                               ):
 
     def __init__(self):
@@ -16,19 +17,36 @@ class ActiveconnectionsPlugin(octoprint.plugin.AssetPlugin,
     # ~~ EventHandlerPlugin mixin
 
     def on_event(self, event, payload):
-        if event not in [Events.CLIENT_OPENED, Events.CLIENT_CLOSED]:
+        if event not in [Events.CLIENT_AUTHED, Events.CLIENT_CLOSED]:
             return
 
-        if event == Events.CLIENT_OPENED and payload["remoteAddress"] not in self.active_connections:
-            self.active_connections.append(payload["remoteAddress"])
+        if self._settings.get(["remove_string"]) != "" and payload.get("remoteAddress", False):
+            payload["remoteAddress"] = payload["remoteAddress"].replace(self._settings.get(["remove_string"]), "")
 
-        if event == Events.CLIENT_CLOSED and payload["remoteAddress"] in self.active_connections:
-            self.active_connections.remove(payload["remoteAddress"])
+        if event == Events.CLIENT_AUTHED and not any(
+            connection["remoteAddress"] == payload["remoteAddress"] and connection["username"] == payload["username"]
+            for connection in self.active_connections):
+            self.active_connections.append(payload)
 
-        self._logger.info(self.active_connections)
+        if event == Events.CLIENT_CLOSED and any(
+            connection["remoteAddress"] == payload["remoteAddress"] for connection in self.active_connections):
+            self.active_connections = [connection for connection in self.active_connections if
+                                       not (connection['remoteAddress'] == payload["remoteAddress"])]
+
+        self._logger.debug(self.active_connections)
         self._plugin_manager.send_plugin_message(self._identifier, {"active_connections": self.active_connections})
 
+    # ~~ SettingsPlugin mixin
+
+    def get_settings_defaults(self):
+        return {
+            "remove_string": ""
+        }
+
     # ~~ TemplatePlugin mixin
+
+    def get_template_vars(self):
+        return {"plugin_version": self._plugin_version}
 
     def get_template_configs(self):
         return [{'type': "sidebar", 'icon': "network-wired", 'custom_bindings': True,
@@ -54,8 +72,10 @@ class ActiveconnectionsPlugin(octoprint.plugin.AssetPlugin,
                 "user": "jneilliii",
                 "repo": "OctoPrint-ActiveConnections",
                 "current": self._plugin_version,
-
-                # update method: pip
+                "stable_branch": {'name': "Stable", 'branch': "master", 'comittish': ["master"]},
+                "prerelease_branches": [
+                    {'name': "Release Candidate", 'branch': "rc", 'comittish': ["rc", "master"]}
+                ],
                 "pip": "https://github.com/jneilliii/OctoPrint-ActiveConnections/archive/{target_version}.zip",
             }
         }
