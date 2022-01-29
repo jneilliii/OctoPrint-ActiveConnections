@@ -56,6 +56,7 @@ class ActiveconnectionsPlugin(octoprint.plugin.AssetPlugin,
 
     def get_assets(self):
         return {
+            "css": ["css/activeconnections.css"],
             "js": ["js/activeconnections.js"]
         }
 

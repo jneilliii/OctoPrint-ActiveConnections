@@ -12,6 +12,10 @@ $(function() {
 
         self.active_connections = ko.observableArray([]);
 
+        self.display_text = function(data) {
+            return (data["remoteAddress"] + " (" + data["username"] + ")");
+        };
+
         self.onDataUpdaterPluginMessage = function (plugin, data) {
             if (plugin !== "activeconnections") {
                 return;
